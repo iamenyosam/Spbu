@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Parse command line options
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -f)
+      # Set file path
+      file=$2
+      shift 2
+      ;;
+    *)
+      # Break loop if no more options
+      break
+      ;;
+  esac
+done
+
+# Set default file path if not specified
+if [[ -z "$file" ]]; then
+  file="/etc/passwd"
+fi
+
+# Check if file exists
+if [[ ! -f "$file" ]]; then
+  >&2 echo "Error: file not found: $file"
+  exit 2
+fi
+
+# Set login to search for
+if [[ -n "$1" ]]; then
+  login=$1
+else
+  login=$USER
+fi
+
+# Search for login in file
+home=$(grep "^$login:" "$file" | cut -d: -f6)
+
+# Check if login was found
+if [[ -z "$home" ]]; then
+  >&2 echo "Error: login not found: $login"
+  exit 1
+fi
+
+# Print home directory
+echo "$home"
+exit 0
