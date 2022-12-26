@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Check if the script was called with the correct number of arguments
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 SUFFIX FILE_PATTERN"
+  exit 1
+fi
+
+# Save the suffix and file pattern as variables
+suffix=$1
+file_pattern=$2
+
+# Loop through all the files that match the file pattern
+for file in $file_pattern; do
+  # Extract the filename and extension from the file
+  filename=$(basename "$file")
+  extension="${filename##*.}"
+  filename="${filename%.*}"
+
+  # Construct the new filename by adding the suffix before the extension
+  new_filename="$filename$suffix.$extension"
+
+  # Rename the file with the new filename
+  mv "$file" "$new_filename"
+done
