@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Print usage message and exit
+usage() {
+  echo "Usage: topsize [-N] [-s minsize] [-h] [--] [dir]"
+  echo "  -N        number of files (optional, default is all files)"
+  echo "  -s minsize minimal file size in bytes (optional, default is 1 byte)"
+  echo "  -h        print sizes in human-readable format (optional)"
+  echo "  --        option and non-option argument separator"
+  echo "  dir       directory to search (optional, default is current directory)"
+  exit 1
+}
+
+# Check for --help flag
+for arg in "$@"; do
+  if [[ $arg == "--help" ]]; then
+    usage
+  fi
+done
+
+# Set default values for variables
+num_files=-1
+min_size=1
+human_readable=false
+
+# Parse command line arguments
+while getopts ":N:s:h" opt; do
+  case $opt in
+    N) num_files=$OPTARG ;;
+    s) min_size=$OPTARG ;;
+    h) human_readable=true ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      usage
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      usage
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+# Set directory to search
+if [[ $# -eq 0 ]]; then
+  dir="."
+else
+  dir="$1"
+fi
+
+# Find all files larger than the specified size and sort by size in descending order
+find "$dir" -type f -size +"$min_size"c -exec du -sh {} + | sort -hr | head -n "$num_files"
