@@ -1,25 +1,73 @@
 #!/bin/bash
 
-# Check if the script was called with the correct number of arguments
-if [ $# -ne 2 ]; then
-  echo "Usage: $0 SUFFIX FILE_PATTERN"
+# Parse command line options and arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h)
+      # Print help message
+      echo "Usage: insert_suffix [-d] [-v] [-h] [--] sfx files..."
+      echo "Inserts a suffix to the file name before the file's extension."
+      echo ""
+      echo "Options:"
+      echo "  -h        Print this help message."
+      echo "  -d        Dry run, print old and new file names without actual renaming."
+      echo "  -v        Print old and new names of renamed files."
+      echo "  --        Option and suffix/file names separator."
+      exit 0
+      ;;
+    -d)
+      # Set dry run flag
+      dry_run=true
+      shift
+      ;;
+    -v)
+      # Set verbose flag
+      verbose=true
+      shift
+      ;;
+    --)
+      # Shift past separator
+      shift
+      break
+      ;;
+    *)
+      # Break loop if no more options
+      break
+      ;;
+  esac
+done
+
+# Check if suffix is specified
+if [[ -z "$1" ]]; then
+  >&2 echo "Error: suffix not specified."
+  exit 1
+fi
+suffix=$1
+shift
+
+# Check if any files are specified
+if [[ $# -eq 0 ]]; then
+  >&2 echo "Error: no files specified."
   exit 1
 fi
 
-# Save the suffix and file pattern as variables
-suffix=$1
-file_pattern=$2
+# Iterate through file list
+for file in "$@"; do
+  # Extract file name and extension
+  name=$(basename "$file")
+  extension="${name##*.}"
+  name="${name%.*}"
 
-# Loop through all the files that match the file pattern
-for file in $file_pattern; do
-  # Extract the filename and extension from the file
-  filename=$(basename "$file")
-  extension="${filename##*.}"
-  filename="${filename%.*}"
+  # Insert suffix
+  new_name="${name}${suffix}.${extension}"
 
-  # Construct the new filename by adding the suffix before the extension
-  new_filename="$filename$suffix.$extension"
+  # Print old and new names if verbose flag is set
+  if [[ -n "$verbose" ]]; then
+    echo "$file -> $new_name"
+  fi
 
-  # Rename the file with the new filename
-  mv "$file" "$new_filename"
+  # Rename file unless dry run flag is set
+  if [[ -z "$dry_run" ]]; then
+    mv "$file" "$new_name"
+  fi
 done
