@@ -68,6 +68,6 @@ for file in "$@"; do
 
   # Rename file unless dry run flag is set
   if [[ -z "$dry_run" ]]; then
-    mv "$file" "$new_name"
+    mv -- "$file" "$new_name"
   fi
 done
